@@ -9,9 +9,16 @@ function KnotGrid({ rows, cols, resetSignal }) {
   const [showSelection, setShowSelection] = useState(false)
 
   // Update grid if rows or cols change
+
+  // TODO: create way to keep knot in the grid when resizing
   useEffect(() => {
     setCells(Array.from({ length: rows * cols }, () => 0))
-  }, [rows, cols, resetSignal])
+  }, [rows, cols])
+
+  // Reset if resetSignal is updates
+  useEffect(() => {
+    setCells(Array.from({ length: rows * cols }, () => 0))
+  }, [resetSignal])
 
   // Images
   const bgImages = Array.from({ length: 10 }, (_, i) => `/images/T_${i + 1}.PNG`)
