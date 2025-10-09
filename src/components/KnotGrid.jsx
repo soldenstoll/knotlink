@@ -2,11 +2,12 @@ import '../App.css'
 import React, { useEffect } from "react";
 import { useState } from 'react';
 
-function KnotGrid({ rows, cols, resetSignal }) {
+function KnotGrid({ rows, cols, resetSignal, assembleSignal }) {
   // State
   const [cells, setCells] = useState(Array.from({ length: rows * cols }, () => 0))
   const [currCell, setCurrCell] = useState(-1)
   const [showSelection, setShowSelection] = useState(false)
+  
 
   // Update grid if rows or cols change
 
@@ -22,6 +23,8 @@ function KnotGrid({ rows, cols, resetSignal }) {
 
   // Images
   const bgImages = Array.from({ length: 10 }, (_, i) => `/images/T_${i + 1}.PNG`)
+  const gap = assembleSignal === 0 ? "0.5rem" : "0rem";
+
 
   return (
     <div className="grid-wrapper text-black flex flex-col">
@@ -30,7 +33,8 @@ function KnotGrid({ rows, cols, resetSignal }) {
            aria-label="5 by 5 grid"
            style={{
             'gridTemplateColumns': `repeat(${cols}, 4rem)`,
-            'gridTemplateRows': `repeat(${rows}, 4rem)`
+            'gridTemplateRows': `repeat(${rows}, 4rem)`,
+            'gap': `${gap}`,
            }}
       >
         {cells.map((_, i) => {
@@ -50,7 +54,17 @@ function KnotGrid({ rows, cols, resetSignal }) {
               style={bgStyle}
               onClick={() => {
                 setCurrCell(i);
-                setShowSelection(true);
+                setShowSelection(!showSelection && (assembleSignal === 0));
+              }}
+              onDoubleClick={() => {
+                setCurrCell(i);
+
+                // Update cells
+                if (assembleSignal === 0) {
+                  const newCells = [...cells];
+                  newCells[currCell] = 0;
+                  setCells(newCells);
+                }
               }}
           /> 
           )

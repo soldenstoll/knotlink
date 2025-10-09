@@ -6,13 +6,18 @@ import { useState } from 'react';
 function MosaicMaker() {
   const [rows, setRows] = useState(5);
   const [cols, setCols] = useState(5);
-  const [resetSignal, setResetSignal] = useState(0);
+  const [resetSignal, setResetSignal] = useState(0);  
+  const [assembleSignal, setAssembleSignal] = useState(0);
+
+  const buttonName = ["Assemble", "Edit"];
+
 
   const options = Array.from({ length: 20 }, (_, i) => i + 1)
 
   return (
     <div className='text-black'>
       <h1>Mosaic Creator</h1>
+      <p>Click on a cell to change its tile. Double click to reset a tile.</p>
       <div className='flex flex-row justify-center p-2'>
         <div>Rows:&nbsp;</div>
         <select 
@@ -47,8 +52,15 @@ function MosaicMaker() {
         >
           Reset
         </button>
+        <p>&nbsp;</p>
+        <button onClick={() => (
+          setAssembleSignal((assembleSignal + 1) % 2)
+        )}
+        >
+          {buttonName[assembleSignal]}
+        </button>
       </div>
-      <KnotGrid rows={rows} cols={cols} resetSignal={resetSignal} />
+      <KnotGrid rows={rows} cols={cols} resetSignal={resetSignal} assembleSignal={assembleSignal} />
     </div>
   )
 }
