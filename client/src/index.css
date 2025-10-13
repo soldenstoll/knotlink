@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: white;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #000dff;
+  text-decoration: underline;
+}
+a:hover {
+  color: #000dff;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Grid layout styles for the 5x5 board */
+.grid-wrapper {
+  /* center horizontally and vertically */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  /* place it visually in the middle of the page */
+  margin: 0 auto;
+}
+
+.cell {
+  background-color: white;
+  border: 2px solid black;
+  box-sizing: border-box;
+  width: 4rem;
+  height: 4rem;
+}
+
+.cell:hover {
+  transform: scale(1.1);
+}
+
+.cell2 {
+  background-color: gray;
+  border: 2px solid black;
+  box-sizing: border-box;
+  width: 4rem;
+  height: 4rem;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 4px;
+  border: 1px solid;
+  padding: 0px 0.5rem
+}
+button:hover {
+  background-color: rgb(240, 240, 240);
+}
+button:active {
+  box-shadow: 0px 1px 1px black;
+  top:3px
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light;
+  }
+}
