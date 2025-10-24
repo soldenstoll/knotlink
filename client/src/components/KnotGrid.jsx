@@ -1,20 +1,68 @@
 import '../App.css'
 import React, { useEffect } from "react";
 import { useState } from 'react';
+import KnotInput from './KnotInput';
 
+// TODO: Add import and export buttons
 function KnotGrid({ rows, cols, resetSignal, assembleSignal }) {
   // State
   const [cells, setCells] = useState(Array.from({ length: rows * cols }, () => 0))
   const [currCell, setCurrCell] = useState(-1)
   const [showSelection, setShowSelection] = useState(false)
-  
 
-  // Update grid if rows or cols change
 
-  // TODO: create way to keep knot in the grid when resizing
+  // Keeps the grid data the same while updating size
+  const updateOnColChange = () => {
+    const oldcols = cells.length / rows
+    const tmp = Array.from({ length: rows * cols }, () => 0)
+    if (oldcols < cols) {
+      for (var i = 0; i < rows; i++) {
+        for (var j = 0; j < oldcols; j++) {
+          tmp[cols * i + j] = cells[oldcols * i + j]
+        }
+      }
+    } else {
+      for (var i = 0; i < rows; i++) {
+        for (var j = 0; j < cols; j++) {
+          tmp[cols * i + j] = cells[oldcols * i + j]
+        }
+      }
+    }
+    setCells(tmp)
+  }
+
+  const updateOnRowChange = () => {
+    const oldrows = cells.length / cols
+    if (oldrows < rows) {
+      const tmp = [...cells]
+      for (var i = 0; i < (rows - oldrows) * cols; i++) {
+        tmp.push(0)
+      }
+      setCells(tmp)
+    } else {
+      const tmp = Array.from({ length: rows * cols }, () => 0)
+      for (var i = 0; i < rows; i++) {
+        for (var j = 0; j < cols; j++) {
+          tmp[cols * i + j] = cells[cols * i + j]
+        }
+      }
+      setCells(tmp)
+    }
+  }
+
+  // Update grid if rows change
   useEffect(() => {
-    setCells(Array.from({ length: rows * cols }, () => 0))
-  }, [rows, cols])
+    updateOnRowChange()
+    setShowSelection(false)
+    setCurrCell(-1)
+  }, [rows])
+
+  // Update grid if cols change
+  useEffect(() => {
+    updateOnColChange()
+    setShowSelection(false)
+    setCurrCell(-1)
+  }, [cols])
 
   // Reset if resetSignal is updated
   useEffect(() => {
@@ -123,6 +171,7 @@ function KnotGrid({ rows, cols, resetSignal, assembleSignal }) {
         </div>}
         {!showSelection && 
         <div className='h-[266px]'></div>}
+        <KnotInput cellSetter={setCells} />
     </div>
   )
 }
