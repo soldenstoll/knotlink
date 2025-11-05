@@ -4,12 +4,14 @@ import { useState } from 'react';
 import KnotInput from './KnotInput';
 
 // TODO: Add import and export buttons
-function KnotGrid({ rows, cols, resetSignal, assembleSignal }) {
+function KnotGrid({ rows, cols, resetSignal, assembleSignal, setCols, setRows }) {
   // State
   const [cells, setCells] = useState(Array.from({ length: rows * cols }, () => 0))
   const [currCell, setCurrCell] = useState(-1)
   const [showSelection, setShowSelection] = useState(false)
 
+  /////////////////////////////////////////////////////////////////////////////
+  // Effects and grid changing
 
   // Keeps the grid data the same while updating size
   const updateOnColChange = () => {
@@ -77,11 +79,21 @@ function KnotGrid({ rows, cols, resetSignal, assembleSignal }) {
     setCurrCell(-1)
   }, [assembleSignal])
 
-  // Images
+  // Passed to KnotInput to set cell data
+  const wrappedSetter = (_cells, _rows, _cols) => {
+    setRows(_rows)
+    setCols(_cols)
+    setCells(_cells)
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+
+  // Create list of images
   const bgImages = Array.from({ length: 10 }, (_, i) => `/images/T_${i + 1}.PNG`)
+  bgImages.push("/images/T_11.jpg")
   const gap = assembleSignal === 0 ? "0.5rem" : "0rem";
 
-
+  // Display grid
   return (
     <div className="grid-wrapper text-black flex flex-col mb-4">
       <div className="grid" 
@@ -136,7 +148,7 @@ function KnotGrid({ rows, cols, resetSignal, assembleSignal }) {
                  'gridTemplateRows': `repeat(3, 4rem)`
               }}
             >
-              {Array.from({ length: 11 }).map((_, i) => {
+              {Array.from({ length: 11 }).map((_, i) => { /* TODO: ADD HANDLING FOR T_11 */
                 const bgStyle = i === 10
                   ? {
                     gridColumn: "3",
@@ -171,7 +183,7 @@ function KnotGrid({ rows, cols, resetSignal, assembleSignal }) {
         </div>}
         {!showSelection && 
         <div className='h-[266px]'></div>}
-        <KnotInput cellSetter={setCells} />
+        <KnotInput setter={wrappedSetter} />
     </div>
   )
 }

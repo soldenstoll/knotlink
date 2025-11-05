@@ -60,7 +60,8 @@ function MosaicMaker() {
           {buttonName[assembleSignal]}
         </button>
       </div>
-      <KnotGrid rows={rows} cols={cols} resetSignal={resetSignal} assembleSignal={assembleSignal} />
+      <KnotGrid rows={rows} cols={cols} resetSignal={resetSignal} assembleSignal={assembleSignal}
+                setCols={setCols} setRows={setRows} />
     </div>
   )
 }
