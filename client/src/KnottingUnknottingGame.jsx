@@ -27,6 +27,9 @@ function KnottingUnknottingGame() {
                 {!loadBoard && <button onClick={() => setLoadBoard(true)}>load game board</button>}
                 {loadBoard && <KnotInput setter={wrappedSetter}></KnotInput>}
             </div>}
+            <div id="game-start-wrapper" className="w-full flex flex-row gap-4 justify-center">
+                {!gameBegan && <button>start game</button>}
+            </div>
             <GameGrid rows={rows} cols={cols} board={board}></GameGrid>
         </div>
     )
