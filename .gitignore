@@ -1,1 +1,4 @@
 .venv/*
+server/terminal_game.py
+server/__pycache__/game_state.cpython-313.pyc
+server/__pycache__/generate_torus_knot.cpython-313.pyc
