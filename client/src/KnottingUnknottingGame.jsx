@@ -15,14 +15,16 @@ function KnottingUnknottingGame() {
     const [gameBegan, setGameBegan] = useState(false)
 
     const wrappedSetter = (_board, _rows, _cols) => {
+        setBoard(_board)
         setRows(_rows)
         setCols(_cols)
-        setBoard(_board)
         setLoadBoard(false)
+        console.log(rows)
+        console.log(cols)
     }
 
     return (
-        <div className="flex flex-col w-full gap-4">  
+        <div className="flex flex-col w-full gap-4 text-black">  
             {!gameBegan && <div id="game-knotinput-wrapper" className="flex flex-col w-[80%] items-center self-center">
                 {!loadBoard && <button onClick={() => setLoadBoard(true)}>load game board</button>}
                 {loadBoard && <KnotInput setter={wrappedSetter}></KnotInput>}

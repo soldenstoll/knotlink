@@ -4,7 +4,8 @@ import { useState } from 'react';
 import KnotInput from './KnotInput';
 
 // TODO: Add import and export buttons
-function KnotGrid({ rows, cols, resetSignal, assembleSignal, setCols, setRows }) {
+function KnotGrid({ rows, cols, resetSignal, assembleSignal, 
+                    setCols, setRows, importSignal, exportSignal }) {
   // State
   const [cells, setCells] = useState(Array.from({ length: rows * cols }, () => 0))
   const [currCell, setCurrCell] = useState(-1)
@@ -86,6 +87,20 @@ function KnotGrid({ rows, cols, resetSignal, assembleSignal, setCols, setRows })
     setCells(_cells)
   }
 
+  const getStringRep = () => {
+    let res = "["
+    for (let i = 0; i < rows; i++) {
+      res += "["
+      for (let j = 0; j < cols - 1; j++) {
+        res += cells[i * cols + j] + ", "
+      }
+      res += cells[i * cols + cols - 1] + "]"
+      res += i === rows - 1 ? "" : "\n" 
+    }
+    res += "]"
+    return res
+  }
+
   /////////////////////////////////////////////////////////////////////////////
 
   // Create list of images
@@ -96,7 +111,18 @@ function KnotGrid({ rows, cols, resetSignal, assembleSignal, setCols, setRows })
   // Display grid
   return (
     <div className="grid-wrapper text-black flex flex-col mb-4">
-      <div className="grid" 
+      {importSignal && 
+      <div className="flex flex-col mb-4 items-center">
+        <KnotInput setter={wrappedSetter} />
+      </div>}
+      {exportSignal && 
+      <div className="flex flex-col mb-4 items-center">
+        <textarea id="input-box" rows={8} cols={60} value={getStringRep()}
+                className="border-1 rounded-lg caret-transparent"
+        >
+        </textarea>  
+      </div>}
+      <div className="grid"
            role="grid" 
            aria-label="5 by 5 grid"
            style={{
@@ -183,7 +209,6 @@ function KnotGrid({ rows, cols, resetSignal, assembleSignal, setCols, setRows })
         </div>}
         {!showSelection && 
         <div className='h-[266px]'></div>}
-        <KnotInput setter={wrappedSetter} />
     </div>
   )
 }

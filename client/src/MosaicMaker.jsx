@@ -8,9 +8,10 @@ function MosaicMaker() {
   const [cols, setCols] = useState(5);
   const [resetSignal, setResetSignal] = useState(0);  
   const [assembleSignal, setAssembleSignal] = useState(0);
+  const [importSignal, setImportSignal] = useState(false)
+  const [exportSignal, setExportSignal] = useState(false)
 
   const buttonName = ["Assemble", "Edit"];
-
 
   const options = Array.from({ length: 20 }, (_, i) => i + 1)
 
@@ -59,9 +60,25 @@ function MosaicMaker() {
         >
           {buttonName[assembleSignal]}
         </button>
+        <p>&nbsp;</p>
+        <button onClick={() => {
+          setImportSignal(!importSignal)
+          setExportSignal(false)
+        }}
+        >
+          Import
+        </button>
+        <p>&nbsp;</p>
+        <button onClick={() => {
+          setExportSignal(!exportSignal)
+          setImportSignal(false)
+        }}
+        >
+          Export
+        </button>
       </div>
       <KnotGrid rows={rows} cols={cols} resetSignal={resetSignal} assembleSignal={assembleSignal}
-                setCols={setCols} setRows={setRows} />
+                setCols={setCols} setRows={setRows} importSignal={importSignal} exportSignal={exportSignal} />
     </div>
   )
 }
