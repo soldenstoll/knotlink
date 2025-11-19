@@ -1,14 +1,17 @@
 import '../App.css'
 import React, { useEffect } from "react";
 import { useState } from 'react';
-import KnotInput from './KnotInput';
 
 // TODO: Add import and export buttons
-function GameGrid({ board, rows, cols }) {
+function GameGrid({ board, rows, cols, started, setter }) {
   // State
   const [cells, setCells] = useState(board)
   const [currCell, setCurrCell] = useState(-1)
   const [showSelection, setShowSelection] = useState(false)
+
+  useEffect(() => {
+    setCells(board)
+  }, [board])
 
   /////////////////////////////////////////////////////////////////////////////
 
@@ -50,10 +53,14 @@ function GameGrid({ board, rows, cols }) {
                 role="gridcell"
                 style={bgStyle}
                 onClick={() => {
-                  setCurrCell(i);
-                  setShowSelection(!showSelection);
+                  if (!started) {
+                    doOnNotStartedClick()
+                  } else {
+                    setCurrCell(i);
+                    setShowSelection(!showSelection);
+                  }
                 }}
-              /> 
+              />
             )
           }
           
@@ -99,6 +106,8 @@ function GameGrid({ board, rows, cols }) {
                       const newCells = [...cells];
                       newCells[currCell] = i + 9;
                       setCells(newCells);
+                      setter(newCells, rows, cols)
+                      
 
                       // Hide selection pannel
                       setCurrCell(-1);

@@ -1,4 +1,4 @@
-import React, { use, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import KnotInput from "./components/KnotInput";
 import GameGrid from "./components/GameGrid";
 
@@ -7,8 +7,11 @@ function KnottingUnknottingGame() {
     const [rows, setRows] = useState(5)
     const [cols, setCols] = useState(5)
     const [board, setBoard] = useState([0, 2, 5, 5, 1, 2, 11, 5, 1, 6, 6, 6, 2, 11, 4, 6, 3, 11, 4, 0, 3, 5, 4, 0, 0])
+    const [prevBoard, setPrevBoard] = useState([0, 2, 5, 5, 1, 2, 11, 5, 1, 6, 6, 6, 2, 11, 4, 6, 3, 11, 4, 0, 3, 5, 4, 0, 0])
     const [firstMove, setFirstMove] = useState(0)
     const [currMove, setCurrMove] = useState(0)
+    const [round, setRound] = useState(0)
+    const [remainingTerms, setRemainingTerms] = useState(board.filter(item => item === 11).length)
 
     // Board loading state
     const [loadBoard, setLoadBoard] = useState(false)
@@ -30,6 +33,21 @@ function KnottingUnknottingGame() {
         setCurrMove(event.target.value)
     }
 
+    const doOnSubmitClick = () => {
+        setPrevBoard([...board])
+        setRound(round + 1)
+        setCurrMove((currMove + 1) % 2)
+        setRemainingTerms(remainingTerms - 1)
+    }
+
+    const doOnUndoClick = () => {
+        setBoard([...prevBoard]);
+    }
+
+    useEffect(() => {
+        setRemainingTerms(board.filter(item => item === 11).length)
+    }, [board])
+
     return (
         <div className="flex flex-col w-full gap-4 text-black">  
             {!gameBegan && <div id="game-knotinput-wrapper" className="flex flex-col w-[80%] items-center self-center">
@@ -47,7 +65,17 @@ function KnottingUnknottingGame() {
                     <option value={1}>Knotter</option>
                 </select>
             </div>}
-            <GameGrid rows={rows} cols={cols} board={board}></GameGrid>
+            {gameBegan && <div id="game-progress-wrapper" className="w-full flex flex-col gap-4 justify-center">
+                <div id="game-state-wrapper" className="w-full flex flex-row gap-4 justify-center">
+                    <p>Current move: {currMove === 0 ? "Unknotter" : "Knotter"}</p>
+                    <p>Remaining turns: {remainingTerms}</p>
+                    <p>First move: {firstMove === 0 ? "Unknotter" : "Knotter"}</p>
+                    <button onClick={doOnSubmitClick}>Submit move</button>
+                    <button onClick={doOnUndoClick}>Undo move</button>
+                </div>
+                <p>Select a highligted cell below to resolve its crossing, and submit when done</p>
+            </div>}
+            <GameGrid rows={rows} cols={cols} board={[...board]} canMove={gameBegan} setter={wrappedSetter}></GameGrid>
         </div>
     )
 }
