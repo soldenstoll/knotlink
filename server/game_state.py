@@ -53,12 +53,14 @@ class GameState:
         self.current_player = starting_player
         self.move_history: List[GameMove] = []
         self.game_over = False
+        self.winner: Optional[Player] = None
+        self.is_unknot: Optional[bool] = None
 
         if not self._validate_board_dimensions():
             raise ValueError("Invalid board: rows must all have the same length")
 
         if self.rows == 0 or self.cols == 0:
-            self.game_over = True  # trivial empty board
+            self.game_over = True
 
     def _validate_board_dimensions(self) -> bool:
         """Ensure all rows have the same number of columns."""
@@ -68,7 +70,7 @@ class GameState:
         return all(len(row) == expected_cols for row in self.board)
 
     def has_unresolved_crossings(self) -> bool:
-        """True if any tile is UNRESOLVED (11)."""
+        """True if any tile is UNRESOLVED (-1)."""
         return any(tile == TileType.UNRESOLVED.value for row in self.board for tile in row)
 
     def get_unresolved_positions(self) -> List[Tuple[int, int]]:
@@ -133,7 +135,7 @@ class GameState:
         # check for end of game
         if not self.has_unresolved_crossings():
             self.game_over = True
-            return True, f"Move accepted. Game over — all crossings resolved. Winner: {self.current_player.value}"
+            return True, f"Move accepted. Game over — all crossings resolved. Awaiting classification to determine winner."
 
         # swap players
         self.current_player = Player.UNKNOTTER if self.current_player == Player.KNOTTER else Player.KNOTTER
@@ -155,6 +157,8 @@ class GameState:
             "move_count": len(self.move_history),
             "rows": self.rows,
             "cols": self.cols,
+            "winner": self.winner.value if self.winner else None,
+            "is_unknot": self.is_unknot
         }
 
     def reset_game(self, initial_board: Optional[List[List[int]]] = None, starting_player: Optional[Player] = None):
@@ -177,6 +181,8 @@ class GameState:
 
         self.move_history.clear()
         self.game_over = not self.has_unresolved_crossings() or self.rows == 0 or self.cols == 0
+        self.winner = None
+        self.is_unknot = None
 
 
 def create_game(board: List[List[int]], starting_player: str) -> GameState:

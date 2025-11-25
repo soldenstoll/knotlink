@@ -8,11 +8,15 @@ from flask_cors import CORS
 from game_state import GameState, Player, create_game
 from typing import Dict
 import uuid
+import requests
 
 app = Flask(__name__)
 CORS(app)
 
 active_games: Dict[str, GameState] = {}
+
+# Classifier service URL
+CLASSIFIER_URL = "http://localhost:5001/api/classify"
 
 
 @app.route('/api/game/new', methods=['POST'])
@@ -91,6 +95,61 @@ def make_move(game_id: str):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+
+@app.route('/api/game/<game_id>/classify', methods=['POST'])
+def classify_board(game_id: str):
+    """
+    Classify the current board state as knot or unknot.
+    This can be called anytime to check the current board state.
+    """
+    game = active_games.get(game_id)
+    if not game:
+        return jsonify({"error": "Game not found"}), 404
+
+    try:
+        # Get current board state
+        board = game.get_board_state()
+        
+        # Check if there are any unresolved crossings
+        unresolved = game.has_unresolved_crossings()
+        
+        # Call the classifier service
+        response = requests.post(CLASSIFIER_URL, json={'mosaic': board}, timeout=10)
+        
+        if response.status_code == 200:
+            classifier_result = response.json()
+            
+            # Determine winner if game is complete
+            if not unresolved and game.game_over:
+                is_unknot = classifier_result.get('is_unknot')
+                if is_unknot is not None:
+                    game.is_unknot = is_unknot
+                    # Unknotter wins if it's an unknot, Knotter wins if it's a knot
+                    game.winner = Player.UNKNOTTER if is_unknot else Player.KNOTTER
+            
+            return jsonify({
+                "board": board,
+                "classification": classifier_result,
+                "game_complete": not unresolved,
+                "unresolved_crossings": len(game.get_unresolved_positions()),
+                "winner": game.winner.value if game.winner else None
+            }), 200
+        else:
+            return jsonify({
+                "error": "Classifier service error",
+                "details": response.json()
+            }), response.status_code
+            
+    except requests.exceptions.ConnectionError:
+        return jsonify({
+            "error": "Cannot connect to classifier service",
+            "hint": "Make sure classifier_service.py is running on port 5001"
+        }), 503
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "Classifier service timeout"}), 504
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/game/<game_id>/validate', methods=['POST'])
