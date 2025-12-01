@@ -9,6 +9,7 @@ from game_state import GameState, Player, create_game
 from typing import Dict
 import uuid
 import requests
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -16,8 +17,7 @@ CORS(app)
 active_games: Dict[str, GameState] = {}
 
 # Classifier service URL
-CLASSIFIER_URL = "http://localhost:5001/api/classify"
-
+CLASSIFIER_URL = os.environ.get('CLASSIFIER_URL', 'http://localhost:5001/api/classify')
 
 @app.route('/api/game/new', methods=['POST'])
 def new_game():
