@@ -1,42 +1,118 @@
 import '../App.css'
-import React, { useEffect } from "react";
-import { useState } from 'react';
+import React, { useEffect, useState } from "react";
+import GameAPI from '../services/api';
+import './GameStyles.css';
 
-// TODO: Add import and export buttons
-function GameGrid({ board, rows, cols, started, setter }) {
+function GameGrid({ board, rows, cols, canMove, setter, gameId, pendingMove, setPendingMove }) {
   // State
   const [cells, setCells] = useState(board)
   const [currCell, setCurrCell] = useState(-1)
   const [showSelection, setShowSelection] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     setCells(board)
   }, [board])
-
-  /////////////////////////////////////////////////////////////////////////////
 
   // Create list of images
   const bgImages = Array.from({ length: 10 }, (_, i) => `/images/T_${i + 1}.PNG`)
   bgImages.push("/images/T_11.jpg")
   const moves = Array.from({ length: 2 }, (_, i) => `/images/T_${9 + i}.PNG`)
 
-  const nonplayableCellOnClick = () => {
-    console.log("nah")
-  }
+  // Handle cell click
+  const handleCellClick = (index) => {
+    if (!canMove) {
+      setError("Game has not started or is over");
+      return;
+    }
+
+    if (pendingMove !== null) {
+      setError("You already have a pending move. Submit it before making another move.");
+      return;
+    }
+
+    if (cells[index] !== 11) {
+      setError("Can only modify unresolved crossings");
+      return;
+    }
+
+    setCurrCell(index);
+    setShowSelection(true);
+    setError(null);
+  };
+
+  // Handle tile selection and make move
+  const handleTileSelect = async (tileValue) => {
+    if (!gameId || currCell === -1) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Calculate row and col from flat index
+      const row = Math.floor(currCell / cols);
+      const col = currCell % cols;
+
+      // Make move via API (tiles 9 and 10 in UI map to 9 and 10 in backend)
+      const response = await GameAPI.makeMove(gameId, row, col, tileValue);
+
+      if (response.success) {
+        // Update local state with the new board
+        const newCells = [...cells];
+        newCells[currCell] = tileValue;
+        setCells(newCells);
+        
+        // Convert board back to use 11 for unresolved
+        const boardFor2D = newCells.map(tile => tile === -1 ? 11 : tile);
+        
+        // Update parent component
+        setter(boardFor2D, rows, cols);
+        
+        // Set pending move to indicate a move has been made
+        setPendingMove({ row, col, tileValue });
+        
+        setError(null);
+      } else {
+        setError(response.message || "Move failed");
+      }
+    } catch (err) {
+      setError(`Failed to make move: ${err.message}`);
+    } finally {
+      setLoading(false);
+      setCurrCell(-1);
+      setShowSelection(false);
+    }
+  };
 
   // Display grid
   return (
     <div className="grid-wrapper text-black flex flex-col mb-4">
+      {/* Error display */}
+      {error && (
+        <div className="game-alert game-alert-error">
+          {error}
+        </div>
+      )}
+
+      {/* Loading indicator */}
+      {loading && (
+        <div style={{textAlign: 'center', color: '#2563eb', marginBottom: '8px', fontWeight: '600'}}>
+          Processing move...
+        </div>
+      )}
+
+      {/* Grid */}
       <div className="grid" 
            role="grid" 
-           aria-label="5 by 5 grid"
+           aria-label={`${rows} by ${cols} grid`}
            style={{
             'gridTemplateColumns': `repeat(${cols}, 4rem)`,
             'gridTemplateRows': `repeat(${rows}, 4rem)`,
             'gap': 0,
            }}
       >
-        {cells.map((_, i) => {
+        {cells.map((cell, i) => {
           const bgStyle = cells[i] === 0
             ? {}
             : {
@@ -45,49 +121,41 @@ function GameGrid({ board, rows, cols, started, setter }) {
               backgroundPosition: "center",
             };
           
+          // Unresolved crossing (11 maps to -1 in backend)
           if (cells[i] === 11) {
+            const isPending = pendingMove !== null;
             return (
               <div 
                 key={i} 
-                className='game-playable-cell'
+                className={`game-playable-cell ${!canMove || isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 role="gridcell"
                 style={bgStyle}
-                onClick={() => {
-                  if (!started) {
-                    doOnNotStartedClick()
-                  } else {
-                    setCurrCell(i);
-                    setShowSelection(!showSelection);
-                  }
-                }}
+                onClick={() => !isPending && handleCellClick(i)}
+                title={isPending ? "Submit your current move first" : "Click to resolve this crossing"}
               />
             )
           }
           
+          // Other tiles (non-playable)
           return (
             <div 
               key={i} 
               className='game-nonplayable-cell' 
               role="gridcell"
               style={bgStyle}
-              onClick={() => {
-                /* TODO: Add cannot play message */
-                console.log("can't do that")
-              }}
           /> 
           )
         })}
       </div>
+
+      {/* Tile selection panel */}
       {showSelection && 
-        <div onClick={() => {setShowSelection(false)}} className='mt-4'>
-          <p>Select a tile:</p>
-          <div className="grid p-4 border rounded-lg bg-gray-200 gap-4" 
-               role="grid"
-               style={{
-                 'gridTemplateColumns': `repeat(2, 4rem)`,
-                 'gridTemplateRows': `repeat(1, 4rem)`
-              }}
-            >
+        <div style={{marginTop: '16px'}}>
+          <p style={{textAlign: 'center', marginBottom: '8px', fontWeight: '600', fontSize: '1.125rem'}}>
+            Select a resolution for the crossing:
+          </p>
+          <div className="tile-selection-panel">
+            <div className="tile-selection-grid">
               {Array.from({ length: 2 }).map((_, i) => {
                 const bgStyle = {
                     backgroundImage: `url(${moves[i]})`,
@@ -98,30 +166,35 @@ function GameGrid({ board, rows, cols, started, setter }) {
                 return (
                   <div 
                     key={i} 
-                    className="cell" 
+                    className="cell tile-option" 
                     role="gridcell"
                     style={bgStyle}
-                    onClick={() => {
-                      // Update cells
-                      const newCells = [...cells];
-                      newCells[currCell] = i + 9;
-                      setCells(newCells);
-                      setter(newCells, rows, cols)
-                      
-
-                      // Hide selection pannel
-                      setCurrCell(-1);
-                      setShowSelection(false);
-                    }}
+                    onClick={() => handleTileSelect(i + 9)}
+                    title={i === 0 ? "Tile 9" : "Tile 10"}
                 /> 
                 )
               })}
             </div>
-        </div>}
-        {!showSelection && 
-        <div className='h-[266px]'></div>}
+          </div>
+            <button 
+              onClick={() => {
+                setShowSelection(false);
+                setCurrCell(-1);
+              }}
+              className="game-btn-primary game-btn-gray"
+              style={{marginTop: '16px', marginLeft: 'auto', marginRight: 'auto', display: 'block'}}
+            >
+              Cancel
+            </button>
+        </div>
+      }
+      
+      {/* Spacer when selection panel is hidden */}
+      {!showSelection && 
+        <div className='h-[200px]'></div>
+      }
     </div>
   )
 }
 
-export default GameGrid
+export default GameGrid;
