@@ -11,7 +11,11 @@ function KnottingUnknottingGame() {
     const [firstMove, setFirstMove] = useState(0)
     const [currMove, setCurrMove] = useState(0)
     const [round, setRound] = useState(0)
-    const [remainingTerms, setRemainingTerms] = useState(board.filter(item => item === 11).length)
+    const [remainingTurns, setRemainingTurns] = useState(board.filter(item => item === 11).length)
+    const [moved, setMoved] = useState(true)
+
+    // Check how many te
+    const startingTurns = remainingTurns;
 
     // Board loading state
     const [loadBoard, setLoadBoard] = useState(false)
@@ -24,8 +28,6 @@ function KnottingUnknottingGame() {
         setRows(_rows)
         setCols(_cols)
         setLoadBoard(false)
-        console.log(rows)
-        console.log(cols)
     }
 
     const setMoves = (event) => {
@@ -34,18 +36,22 @@ function KnottingUnknottingGame() {
     }
 
     const doOnSubmitClick = () => {
-        setPrevBoard([...board])
-        setRound(round + 1)
-        setCurrMove((currMove + 1) % 2)
-        setRemainingTerms(remainingTerms - 1)
+        if (moved) {
+            setPrevBoard([...board])
+            setRound(round + 1)
+            setCurrMove((currMove + 1) % 2)
+        } else {
+            // TODO
+        }
     }
 
     const doOnUndoClick = () => {
         setBoard([...prevBoard]);
+        setMoved(false)
     }
 
     useEffect(() => {
-        setRemainingTerms(board.filter(item => item === 11).length)
+        setRemainingTurns(board.filter(item => item === 11).length)
     }, [board])
 
     return (
@@ -68,14 +74,14 @@ function KnottingUnknottingGame() {
             {gameBegan && <div id="game-progress-wrapper" className="w-full flex flex-col gap-4 justify-center">
                 <div id="game-state-wrapper" className="w-full flex flex-row gap-4 justify-center">
                     <p>Current move: {currMove === 0 ? "Unknotter" : "Knotter"}</p>
-                    <p>Remaining turns: {remainingTerms}</p>
+                    <p>Remaining turns: {remainingTurns}</p>
                     <p>First move: {firstMove === 0 ? "Unknotter" : "Knotter"}</p>
                     <button onClick={doOnSubmitClick}>Submit move</button>
                     <button onClick={doOnUndoClick}>Undo move</button>
                 </div>
                 <p>Select a highligted cell below to resolve its crossing, and submit when done</p>
             </div>}
-            <GameGrid rows={rows} cols={cols} board={[...board]} canMove={gameBegan} setter={wrappedSetter}></GameGrid>
+            <GameGrid rows={rows} cols={cols} board={[...board]} started={gameBegan} setter={wrappedSetter}></GameGrid>
         </div>
     )
 }

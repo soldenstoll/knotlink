@@ -46,15 +46,16 @@ function GameGrid({ board, rows, cols, started, setter }) {
             };
           
           if (cells[i] === 11) {
+            const cellType = started ? 'game-playable-cell' : 'game-playable-cell-inactive'
             return (
               <div 
                 key={i} 
-                className='game-playable-cell'
+                className={cellType}
                 role="gridcell"
                 style={bgStyle}
                 onClick={() => {
                   if (!started) {
-                    doOnNotStartedClick()
+                    nonplayableCellOnClick()
                   } else {
                     setCurrCell(i);
                     setShowSelection(!showSelection);
@@ -72,7 +73,7 @@ function GameGrid({ board, rows, cols, started, setter }) {
               style={bgStyle}
               onClick={() => {
                 /* TODO: Add cannot play message */
-                console.log("can't do that")
+                nonplayableCellOnClick()
               }}
           /> 
           )

@@ -46,7 +46,7 @@ body {
   margin: 0 auto;
 }
 
-.cell, .game-playable-cell, .game-nonplayable-cell {
+.cell, .game-playable-cell, .game-playable-cell-inactive, .game-nonplayable-cell {
   background-color: white;
   border: 2px solid black;
   box-sizing: border-box;
@@ -54,7 +54,7 @@ body {
   height: 4rem;
 }
 
-.game-playable-cell {
+.game-playable-cell, .game-playable-cell-inactive {
   border-color: rgba(66, 255, 66, 0.713);
 }
 
