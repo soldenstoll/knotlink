@@ -123,15 +123,21 @@ function GameGrid({ board, rows, cols, canMove, setter, gameId, pendingMove, set
           
           // Unresolved crossing (11 maps to -1 in backend)
           if (cells[i] === 11) {
-            const isPending = pendingMove !== null;
+            const cellType = started ? 'game-playable-cell' : 'game-playable-cell-inactive'
             return (
               <div 
                 key={i} 
-                className={`game-playable-cell ${!canMove || isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                className={cellType}
                 role="gridcell"
                 style={bgStyle}
-                onClick={() => !isPending && handleCellClick(i)}
-                title={isPending ? "Submit your current move first" : "Click to resolve this crossing"}
+                onClick={() => {
+                  if (!started) {
+                    nonplayableCellOnClick()
+                  } else {
+                    setCurrCell(i);
+                    setShowSelection(!showSelection);
+                  }
+                }}
               />
             )
           }
@@ -143,6 +149,10 @@ function GameGrid({ board, rows, cols, canMove, setter, gameId, pendingMove, set
               className='game-nonplayable-cell' 
               role="gridcell"
               style={bgStyle}
+              onClick={() => {
+                /* TODO: Add cannot play message */
+                nonplayableCellOnClick()
+              }}
           /> 
           )
         })}
