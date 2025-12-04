@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  game-backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - CLASSIFIER_URL=http://classifier:5001/api/classify
+    depends_on:
+      - classifier
+    networks:
+      - knotlink-network
+
+  classifier:
+    build:
+      context: ../knot_mosaics
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    networks:
+      - knotlink-network
+
+networks:
+  knotlink-network:
+    driver: bridge
