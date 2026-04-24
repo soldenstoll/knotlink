@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import GameAPI from '../services/api';
 import './GameStyles.css';
 
-function GameGrid({ board, rows, cols, canMove, setter, gameId, pendingMove, setPendingMove }) {
+function GameGrid({ board, rows, cols, canMove, setter, gameId, pendingMove, setPendingMove, setBoardBeforeMove }) {
   // State
   const [cells, setCells] = useState(board)
   const [currCell, setCurrCell] = useState(-1)
@@ -15,6 +15,12 @@ function GameGrid({ board, rows, cols, canMove, setter, gameId, pendingMove, set
     setCells(board)
   }, [board])
 
+  useEffect(() => {
+  if (canMove) {
+    setError(null)
+  }
+}, [canMove])
+
   // Create list of images
   const bgImages = Array.from({ length: 10 }, (_, i) => `/images/T_${i + 1}.PNG`)
   bgImages.push("/images/T_11.jpg")
@@ -23,7 +29,7 @@ function GameGrid({ board, rows, cols, canMove, setter, gameId, pendingMove, set
   // Handle cell click
   const handleCellClick = (index) => {
     if (!canMove) {
-      setError("Game has not started or is over");
+      setError("Game has not started");
       return;
     }
 
@@ -54,8 +60,10 @@ function GameGrid({ board, rows, cols, canMove, setter, gameId, pendingMove, set
       const row = Math.floor(currCell / cols);
       const col = currCell % cols;
 
+      setBoardBeforeMove([...cells]);
       // Make move via API (tiles 9 and 10 in UI map to 9 and 10 in backend)
       const response = await GameAPI.makeMove(gameId, row, col, tileValue);
+      
 
       if (response.success) {
         // Update local state with the new board
@@ -123,16 +131,17 @@ function GameGrid({ board, rows, cols, canMove, setter, gameId, pendingMove, set
           
           // Unresolved crossing (11 maps to -1 in backend)
           if (cells[i] === 11) {
-            const isPending = pendingMove !== null;
+            const isPendingCell = pendingMove !== null && (pendingMove.row * cols + pendingMove.col) === i;
+            const isBlocked = pendingMove !== null && !isPendingCell;
             return (
-              <div 
-                key={i} 
-                className={`game-playable-cell ${!canMove || isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                role="gridcell"
-                style={bgStyle}
-                onClick={() => !isPending && handleCellClick(i)}
-                title={isPending ? "Submit your current move first" : "Click to resolve this crossing"}
-              />
+                <div 
+                    key={i} 
+                    className={`game-playable-cell ${isBlocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${isPendingCell ? 'game-playable-cell-selected' : ''}`}
+                    role="gridcell"
+                    style={bgStyle}
+                    onClick={() => !isBlocked && handleCellClick(i)}
+                    title={isBlocked ? "Submit or undo your current move first" : "Click to resolve this crossing"}
+                />
             )
           }
           

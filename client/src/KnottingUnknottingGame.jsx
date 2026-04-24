@@ -13,7 +13,8 @@ function KnottingUnknottingGame() {
     const [firstMove, setFirstMove] = useState(0);
     const [currMove, setCurrMove] = useState(0);
     const [remainingTerms, setRemainingTerms] = useState(board.filter(item => item === 11).length);
-    const [pendingMove, setPendingMove] = useState(null); // Track the pending move
+    const [pendingMove, setPendingMove] = useState(null);
+    const [boardBeforeMove, setBoardBeforeMove] = useState(null);
     
     // UI state
     const [loadBoard, setLoadBoard] = useState(false);
@@ -97,6 +98,7 @@ function KnottingUnknottingGame() {
             setRemainingTerms(status.unresolved_count);
             setCurrMove((currMove + 1) % 2);
             setPendingMove(null); // Clear pending move after submission
+            setBoardBeforeMove(null);
             
             // Check if game is over
             if (status.game_over && status.unresolved_count === 0) {
@@ -106,6 +108,25 @@ function KnottingUnknottingGame() {
             }
         } catch (err) {
             setError(`Failed to get game status: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Undoes the move that the player has done
+    const undoMove = async () => {
+        if (!boardBeforeMove || !pendingMove) return;
+
+        setLoading(true);
+        setError(null);
+        try {
+            await GameAPI.undoMove(gameId, pendingMove.row, pendingMove.col);
+            setBoard(boardBeforeMove);
+            setBoardBeforeMove(null);
+            setPendingMove(null);
+            setMessage("");
+        } catch (err) {
+            setError(`Failed to undo: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -232,10 +253,12 @@ function KnottingUnknottingGame() {
                             {loading ? "Processing..." : "Submit Move"}
                         </button>
                         <button 
-                            onClick={resetGame}
+                            onClick={undoMove}
+                            disabled={loading || !pendingMove}
                             className="game-btn-primary game-btn-red"
+                            title={!pendingMove ? "Select a tile first to undo" : "Undo your selection"}
                         >
-                            Reset Game
+                            Undo
                         </button>
                     </div>
                     <p style={{textAlign: 'center', fontWeight: '500'}}>
@@ -286,6 +309,7 @@ function KnottingUnknottingGame() {
                 gameId={gameId}
                 pendingMove={pendingMove}
                 setPendingMove={setPendingMove}
+                setBoardBeforeMove={setBoardBeforeMove}
             />
         </div>
     );

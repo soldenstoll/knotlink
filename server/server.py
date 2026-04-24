@@ -95,6 +95,42 @@ def make_move(game_id: str):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+@app.route('/api/game/<game_id>/undo', methods=['POST'])
+def undo_move(game_id: str):
+    """
+    Undo the last move by restoring a cell to unresolved (-1).
+    Expected JSON body: { "row": 0, "col": 2 }
+    """
+    game = active_games.get(game_id)
+    if not game:
+        return jsonify({"error": "Game not found"}), 404
+
+    try:
+        data = request.get_json(force=True, silent=False)
+        row = data.get('row')
+        col = data.get('col')
+
+        if row is None or col is None:
+            return jsonify({"error": "row and col are required"}), 400
+
+        row, col = int(row), int(col)
+        if row < 0 or row >= game.rows or col < 0 or col >= game.cols:
+            return jsonify({"error": f"Position ({row}, {col}) is out of bounds"}), 400
+
+        # Restore cell to unresolved and remove last move from history
+        game.board[row][col] = -1
+        if game.move_history:
+            game.move_history.pop()
+        game.game_over = False
+
+        return jsonify({
+            "success": True,
+            "status": game.get_game_status()
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 @app.route('/api/game/<game_id>/classify', methods=['POST'])

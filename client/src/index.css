@@ -62,6 +62,15 @@ body {
   transform: scale(1.1);
 }
 
+.game-playable-cell-selected {
+  transform: scale(1.1);
+  border-color: rgba(66, 255, 66, 1) !important;
+  border-width: 4px !important;
+  box-shadow: 0 0 8px rgba(66, 255, 66, 0.8);
+  z-index: 10;
+  position: relative;
+}
+
 .cell2 {
   background-color: gray;
   border: 2px solid black;

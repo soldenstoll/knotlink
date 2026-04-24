@@ -77,6 +77,30 @@ class GameAPI {
   }
 
   /**
+   * Undos a move
+   * @param {string} gameId - Game ID
+   * @param {number} row - Row index
+   * @param {number} col - Column index
+   * @returns {Promise<{}>}
+   */
+  async undoMove(gameId, row, col) {
+    const response = await fetch(`${API_BASE_URL}/game/${gameId}/undo`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ row, col }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to undo move');
+    }
+
+    return response.json();
+  }
+
+  /**
    * Classify the board and determine winner
    * @param {string} gameId - Game ID
    * @returns {Promise<object>}
