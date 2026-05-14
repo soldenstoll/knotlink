@@ -173,6 +173,9 @@ function KnottingUnknottingGame() {
         setError(null);
         setMessage("");
         setPendingMove(null);
+        setBoardBeforeMove(null);
+        setRows(5);
+        setCols(5);
         setBoard([0, 2, 5, 5, 1, 2, 11, 5, 1, 6, 6, 6, 2, 11, 4, 6, 3, 11, 4, 0, 3, 5, 4, 0, 0]);
         setRemainingTerms(3);
     };

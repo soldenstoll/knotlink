@@ -55,6 +55,8 @@ class GameState:
         self.game_over = False
         self.winner: Optional[Player] = None
         self.is_unknot: Optional[bool] = None
+        self.initial_board: List[List[int]] = copy.deepcopy(initial_board)
+        self.starting_player_str: str = starting_player.value
 
         if not self._validate_board_dimensions():
             raise ValueError("Invalid board: rows must all have the same length")

@@ -3,9 +3,13 @@ Flask API server for the Knotting/Unknotting game.
 Provides REST endpoints for game management.
 """
 
+from dotenv import load_dotenv
+load_dotenv()  # Must be first before any os.environ.get() calls
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from game_state import GameState, Player, create_game
+from database import init_db, save_game_result
 from typing import Dict
 import uuid
 import requests
@@ -14,9 +18,13 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-active_games: Dict[str, GameState] = {}
+try:
+    init_db()
+    print("Database initialized successfully")
+except Exception as e:
+    print(f"Warning: Could not initialize database: {e}")
 
-# Classifier service URL
+active_games: Dict[str, GameState] = {}
 CLASSIFIER_URL = os.environ.get('CLASSIFIER_URL', 'http://localhost:5001/api/classify')
 
 @app.route('/api/game/new', methods=['POST'])
@@ -155,14 +163,45 @@ def classify_board(game_id: str):
         
         if response.status_code == 200:
             classifier_result = response.json()
+            print("Classifier result:", classifier_result, flush=True)  # ADD THIS TEMPORARILY
             
             # Determine winner if game is complete
             if not unresolved and game.game_over:
                 is_unknot = classifier_result.get('is_unknot')
                 if is_unknot is not None:
                     game.is_unknot = is_unknot
-                    # Unknotter wins if it's an unknot, Knotter wins if it's a knot
                     game.winner = Player.UNKNOTTER if is_unknot else Player.KNOTTER
+
+                    # Build move sequence for storage
+                    move_sequence = [
+                        {
+                            "row": m.row,
+                            "col": m.col,
+                            "tile": m.new_tile,
+                            "player": m.player.value
+                        }
+                        for m in game.move_history
+                    ]
+
+                    # Save every completed game to MongoDB
+                    try:
+                        save_game_result(
+                            game_id=game_id,
+                            initial_board=getattr(game, 'initial_board', board),
+                            final_board=board,
+                            rows=game.rows,
+                            cols=game.cols,
+                            num_unresolved=sum(
+                                1 for row in getattr(game, 'initial_board', board)
+                                for cell in row if cell == -1
+                            ),
+                            starting_player=getattr(game, 'starting_player_str', 'unknotter'),
+                            winner=game.winner.value if game.winner else None,
+                            move_sequence=move_sequence,
+                            classification=classifier_result,
+                        )
+                    except Exception as db_err:
+                        print(f"Warning: Failed to save game to database: {db_err}")
             
             return jsonify({
                 "board": board,
@@ -271,6 +310,44 @@ def delete_game(game_id: str):
 def health_check():
     """Health check endpoint."""
     return jsonify({"status": "healthy", "active_games": len(active_games)}), 200
+
+
+@app.route('/api/research/interesting-games', methods=['GET'])
+def interesting_games():
+    """Return all nontrivial knot results."""
+    try:
+        from database import get_interesting_games
+        games = get_interesting_games()
+        for g in games:
+            if 'created_at' in g and hasattr(g['created_at'], 'isoformat'):
+                g['created_at'] = g['created_at'].isoformat()
+        return jsonify(games), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/research/candidates', methods=['GET'])
+def jones_poly_one_candidates():
+    """Return games where result is nontrivial but Jones polynomial is 1."""
+    try:
+        from database import get_jones_poly_one_games
+        games = get_jones_poly_one_games()
+        for g in games:
+            if 'created_at' in g and hasattr(g['created_at'], 'isoformat'):
+                g['created_at'] = g['created_at'].isoformat()
+        return jsonify(games), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/research/stats', methods=['GET'])
+def research_stats():
+    """Summary statistics."""
+    try:
+        from database import get_stats
+        return jsonify(get_stats()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':

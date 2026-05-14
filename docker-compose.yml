@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5000:5000"
+    env_file:
+      - ./server/.env
     environment:
       - CLASSIFIER_URL=http://classifier:5001/api/classify
     depends_on:

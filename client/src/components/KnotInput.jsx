@@ -29,12 +29,18 @@ function KnotInput({ setter }) {
     }
 
     const safeParseInt = (item, radix) => {
-        const res = parseInt(item, radix)
-        if ((res < 0) || (res > 11) || Number.isNaN(res)) {
-            return 0
-        }
-        return res
+    const res = parseInt(item, radix)
+    if (Number.isNaN(res)) {
+        return 0
     }
+    if (res === -1) {
+        return 11  // -1 in backend = unresolved crossing = tile 11 in UI
+    }
+    if (res < 0 || res > 11) {
+        return 0
+    }
+    return res
+}
 
     return (
         <>
